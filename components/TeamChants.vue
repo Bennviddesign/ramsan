@@ -1,41 +1,54 @@
 <script setup>
+// Define component props
 const props = defineProps({
     team: {
         type: String,
-        required: true
+        required: true // The "team" prop is required and must be a string
     }
 })
 
-const contents = ref([])
-const config = useRuntimeConfig()
+// Reactive state variables
+const contents = ref([]);
+const config = useRuntimeConfig();
+const isLoading = ref(true);
 
+const cacheVersion = 'v1.0'; // Cache version to help manage cache updates
+
+// Utility function to add line breaks in text for proper formatting
 const addLineBreaks = (text) => {
-    return text.replace(/(?:\r\n|\r|\n)/g, '<br>')
-}
+    return text.replace(/(?:\r\n|\r|\n)/g, '<br>');
+};
 
+// Fetches data from Google Sheets API with caching
 const fetchSheetData = async () => {
-    const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/19tGjwPE8Zd_CQe0Ar2eNUJlSzlD5K4u3Mf2amHHAGrQ/values/${props.team}?key=${config.public.googleSheetsApiKey}`
+    // Construct API URL using the provided team name and Google Sheets API key
+    const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/19tGjwPE8Zd_CQe0Ar2eNUJlSzlD5K4u3Mf2amHHAGrQ/values/${props.team}?key=${config.public.googleSheetsApiKey}`;
+    const cacheKey = `${apiUrl}_${cacheVersion}`;
 
     try {
-        const { data } = await useFetch(apiUrl)
-        const rows = data.value.values
+        // Attempt to retrieve cached data, otherwise fetch fresh data
+        const data = await getCachedData(cacheKey, () => $fetch(apiUrl));
+        const rows = data.values;
 
         if (rows && rows.length > 1) {
+            // Transform raw data into an array of objects with structured properties
             contents.value = rows.slice(1).map((row) => ({
                 title: row[0] || '',
                 description: addLineBreaks(row[1] || ''),
                 audioURL: row[2] || '',
                 expanded: false
-            }))
+            }));
         }
     } catch (error) {
-        console.error('Kunde inte hämta in data:', error)
+        console.error('Kunde inte hämta in data:', error);
+    } finally {
+        // Set loading state to false once data fetching is completed (success or failure)
+        isLoading.value = false;
     }
-    console.log(props.team);
+};
 
-}
-
-onMounted(fetchSheetData)
+// Fetch data when the component is mounted
+onMounted(fetchSheetData);
 </script>
 
 <template>
