@@ -47,8 +47,6 @@ export default defineNuxtPlugin((nuxtApp) => {
 
       // Global styles for background
       body.style.backgroundSize = "cover";
-      body.style.backgroundRepeat = "no-repeat";
-      body.style.backgroundPosition = "center";
       body.style.backgroundAttachment = "scroll";
     }
   });

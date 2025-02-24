@@ -63,7 +63,9 @@ onMounted(fetchSheetData);
         <div v-for="(c, index) in contents" :key="index">
             <div class="title" @click="c.expanded = !c.expanded">
                 <div>
-                    <h3 v-if="c.expanded" style="border: 1px solid white; border-radius: 50px; padding: 5px 10px;">{{
+                    <h3 v-if="c.expanded"
+                        style="border: 1px solid white; border-radius: 50px; padding: 5px 10px; margin-left: -10px; margin-top: -5px;">
+                        {{
                         c.title }}</h3>
                     <h3 v-else>{{ c.title }}</h3>
                 </div>
