@@ -1,4 +1,13 @@
 <?php
+/**
+ * @created 2025
+ * @author Bennviddesign (https://bennviddesign.com)
+ * @license MIT
+ * @website https://ramsan.se
+ * @github-repo https://github.com/Bennviddesign/ramsan
+ * @github-profile https://github.com/Bennviddesign
+ */
+
 // Check if the form was submitted
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     // Get form data

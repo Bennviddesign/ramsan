@@ -1,3 +1,14 @@
+<!--
+/**
+ * @created 2025
+ * @author Bennviddesign (https://bennviddesign.com)
+ * @license MIT
+ * @website https://ramsan.se
+ * @github-repo https://github.com/Bennviddesign/ramsan
+ * @github-profile https://github.com/Bennviddesign
+ */
+-->
+
 <script setup>
 definePageMeta({
   title: "/",
