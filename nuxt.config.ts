@@ -7,6 +7,10 @@ export default defineNuxtConfig({
     public: {
       googleSheetsApiKey: process.env.NUXT_PUBLIC_GOOGLE_SHEETS_API_KEY,
       useRealIp: process.env.NODE_ENV === "production",
+      mailHost: process.env.MAIL_HOST,
+      mailPort: process.env.MAIL_PORT,
+      mailUser: process.env.MAIL_USER,
+      mailPassword: process.env.MAIL_PASSWORD,
     },
   },
   nitro: {
@@ -45,7 +49,6 @@ export default defineNuxtConfig({
           sizes: "512x512",
           href: "/android-chrome-512x512.png",
         },
-        { rel: "manifest", href: "/site.webmanifest" },
       ],
     },
   },

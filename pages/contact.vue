@@ -1,32 +1,29 @@
 <template>
   <div class="container">
     <div class="form">
-      <form @submit.prevent="sendMessage">
+      <form action="/send-email.php" method="POST" enctype="multipart/form-data" @submit="handleSubmit">
         <div>
           <h2>Tipsa gärna oss!</h2>
-          <h5>Fungerar inte för tillfälligt</h5>
         </div>
         <div>
           <label for="name">Namn:</label>
-          <input v-model="formData.name" type="text" placeholder="Ditt namn.." required />
+          <input v-model="form.name" name="name" type="text" placeholder="Ditt namn.." required />
         </div>
-
         <div>
           <label for="email">Email:</label>
-          <input v-model="formData.email" type="email" placeholder="Din email.." required />
+          <input v-model="form.email" name="email" type="email" placeholder="Din email.." required />
         </div>
         <div>
           <label for="amne">Ämne:</label>
-          <input v-model="formData.amne" type="text" placeholder="Ämne" required />
+          <input v-model="form.amne" name="amne" type="text" placeholder="Ämne" required />
         </div>
         <div>
           <label for="file">Fil:</label>
-          <input v-on="formData.file" type="file" accept="audio/mpeg" />
+          <input type="file" name="file" accept="audio/mpeg" @change="handleFileUpload" />
         </div>
-
         <div>
           <label for="message">Meddelande:</label>
-          <textarea v-model="formData.message" placeholder="Ditt meddelande.." required></textarea>
+          <textarea v-model="form.message" name="message" placeholder="Ditt meddelande.." required></textarea>
         </div>
         <div style="align-content: end;">
           <div>
@@ -40,35 +37,40 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
+import { useRoute } from 'vue-router';
 
-export default {
-  data() {
-    return {
-      formData: {
-        name: "",
-        email: "",
-        message: "",
-        file: "",
-        amne: "",
-      },
-      successMessage: "",
-      errorMessage: "",
-    };
-  },
-  methods: {
-    async sendMessage() {
-      try {
-        const response = await axios.post("https://ramsan.se/contact.php", this.formData);
-        this.successMessage = response.data.message;
-        this.errorMessage = "";
-      } catch (error) {
-        this.errorMessage = "Error sending message. Please try again.";
-        this.successMessage = "";
-      }
-    },
-  },
+const route = useRoute();
+const form = ref({
+  name: '',
+  email: '',
+  message: '',
+  amne: '',
+});
+const selectedFile = ref(null);
+const successMessage = ref('');
+const errorMessage = ref('');
+
+const handleFileUpload = (event) => {
+  selectedFile.value = event.target.files[0];
+  console.log('File selected:', selectedFile.value ? selectedFile.value.name : 'No file');
 };
+
+const handleSubmit = () => {
+  successMessage.value = 'Skickar...';
+  errorMessage.value = '';
+};
+
+onMounted(() => {
+  if (route.query.success) {
+    successMessage.value = 'Meddelande skickat!';
+    errorMessage.value = '';
+  } else if (route.query.error) {
+    successMessage.value = '';
+    errorMessage.value = 'Misslyckades att skicka meddelande. Försök igen.';
+  }
+});
 </script>
 
 <style scoped>
@@ -76,7 +78,7 @@ export default {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 70vh;
+  height: 80vh;
 }
 
 form {
@@ -164,6 +166,10 @@ button {
   form {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
+  }
+
+  .container {
+    height: 70vh;
   }
 }
 </style>
