@@ -15,7 +15,11 @@ export default defineNuxtPlugin((nuxtApp) => {
       // console.log("Params:", to.params);
 
       // Manage home/contact page
-      if (to.name === "index" || to.name === "contact") {
+      if (
+        to.name === "index" ||
+        to.name === "contact" ||
+        to.name === "privacypolicy"
+      ) {
         const imageUrl = `${basePath}allsvenskan-background.webp`;
         console.log("Laddar generell bakgrund:", imageUrl);
         body.style.backgroundImage = `url('${imageUrl}')`;

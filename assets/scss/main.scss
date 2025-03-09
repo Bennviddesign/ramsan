@@ -29,6 +29,7 @@ body {
   padding: 1rem;
   font-weight: normal;
   font-family: "Poppins";
+  margin-bottom: 34px;
 }
 .wrapper {
   display: grid;
@@ -94,6 +95,7 @@ a {
 @media (min-width: 768px) {
   #__nuxt {
     max-width: 80vw;
+    margin-bottom: 60px;
   }
 
   .wrapper {

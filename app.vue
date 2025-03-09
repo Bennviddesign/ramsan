@@ -1,7 +1,3 @@
-<script setup>
-
-</script>
-
 <template>
   <header>
     <div class="header">
@@ -15,6 +11,8 @@
     </div>
   </header>
   <NuxtPage />
+  <CookieConsent />
+  <AppFooter />
 </template>
 
 <style scoped>
