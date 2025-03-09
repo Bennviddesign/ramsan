@@ -128,7 +128,9 @@ Distributed under the MIT License. See `LICENSE` for details.
 
 ## Author ✍️
 
-Developed with ❤️ by **Marcus Bennvid**  
-📧 Contact: [bennviddesign@gmail.com]  
-🔗 GitHub: [github.com/bennviddesign](https://github.com/bennviddesign)  
-🌍 Website: [bennviddesign.se](https://bennviddesign.com)
+**Bennviddesign**  
+A solo business run by a passionate developer and designer.
+
+📧 **Contact:** [bennviddesign@gmail.com](mailto:bennviddesign@gmail.com)  
+🔗 **GitHub:** [github.com/bennviddesign](https://github.com/bennviddesign)  
+🌍 **Website:** [bennviddesign.se](https://bennviddesign.com)
