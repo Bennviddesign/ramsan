@@ -65,7 +65,7 @@ const teams = computed(() =>
   <main style="text-align: center;">
     <div class="category">
       <h1>Allsvenskan</h1>
-      <img src="/images/teams-logo/allsvenskan/allsvenskan.webp" alt="" width="60" height="60" />
+      <img src="public/images/teams-logo/allsvenskan/allsvenskan.webp" alt="" width="60" height="60" />
     </div>
 
     <div v-if="isLoading">Laddar lag...</div>
