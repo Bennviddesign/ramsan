@@ -21,13 +21,9 @@ const loadTeamInfo = async () => {
     return parseCsv(await response.text());
   }, 1);
 
-  // Rensa bort helt tomma rader
   const validRows = data.filter((row) => row.some((cell) => cell && cell.trim() !== ""));
-
-  // Tvätta props.team så att den bara innehåller ren text i små bokstäver
   const targetSlug = String(props.team || "").toLowerCase().replace(/[^a-z0-9]/g, "");
 
-  // Sök i arket och tvätta även värdet från kolumn D (row[3]) på samma sätt
   const found = validRows.find((row) => {
     const sheetSlug = String(row[3] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
     return sheetSlug === targetSlug;
@@ -70,6 +66,14 @@ const fetchSheetData = async () => {
 
 const teamLogo = computed(() => teamInfo.value?.logo || "");
 const teamName = computed(() => teamInfo.value?.name || props.team);
+
+// 🏷️ DYNAMISK FLIKTITEL (Uppdateras automatiskt när teamInfo har laddats)
+useHead({
+  title: () => {
+    const formattedLeague = props.league ? props.league.charAt(0).toUpperCase() + props.league.slice(1) : "";
+    return formattedLeague ? `${teamName.value} – ${formattedLeague}` : teamName.value;
+  }
+});
 
 onMounted(async () => {
   try {
