@@ -29,6 +29,9 @@ export default defineNuxtConfig({
   },
   app: {
     head: {
+      // 🏷️ DYNAMISK TITEL & FALLBACK FÖR ROUTER
+      title: "Ramsan.se – Fotbollsramsor & Supporterkultur",
+      titleTemplate: "%s | Ramsan.se",
       link: [
         { rel: "icon", type: "image/x-icon", href: "/favicon.ico" },
         {
