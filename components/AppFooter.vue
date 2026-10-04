@@ -1,7 +1,7 @@
 <!--
 /**
  * @created 2025
- * @author Bennviddesign (https://bennviddesign.com)
+ * @author Bennviddesign (https://bennviddesign.se/en)
  * @license MIT
  * @website https://ramsan.se
  * @github-repo https://github.com/Bennviddesign/ramsan

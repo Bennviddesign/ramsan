@@ -1,7 +1,7 @@
 <!--
 /**
  * @created 2025
- * @author Bennviddesign (https://bennviddesign.com)
+ * @author Bennviddesign (https://bennviddesign.se/en)
  * @license MIT
  * @website https://ramsan.se
  * @github-repo https://github.com/Bennviddesign/ramsan
@@ -10,132 +10,199 @@
 -->
 
 <script setup>
-import { ref, computed, onMounted } from "vue";
-
-definePageMeta({
-  title: "/",
-});
-
-// DITT LAG-SHEET SOM CSV
-const SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/1EUnZmcCLt-3v1w_qiPugEAZ0lBXKABk02QTdyZTNxxk/export?format=csv";
+import { computed, onMounted, ref } from "vue";
+import { getLeague, LEAGUES, parseCsv, TEAM_SHEET_URL } from "~/utils/sheets";
 
 const rows = ref([]);
 const isLoading = ref(true);
+const selectedLeague = ref(1);
 
-onMounted(async () => {
+const leagueTabs = Object.entries(LEAGUES).map(([code, league]) => ({
+  code: Number(code),
+  ...league,
+}));
+
+const activeLeague = computed(() => getLeague(selectedLeague.value));
+
+const teams = computed(() =>
+  rows.value
+    .filter((team) => team.league === Number(selectedLeague.value))
+    .map((team) => ({
+      ...team,
+      path: `/${activeLeague.value.slug}/${team.slug}`,
+    }))
+);
+
+const loadTeams = async () => {
   try {
-    const res = await fetch(SHEET_URL);
-    const text = await res.text();
+    const response = await fetch(TEAM_SHEET_URL);
+    if (!response.ok) throw new Error(`Google Sheets svarade ${response.status}`);
 
-    const lines = text.trim().split("\n");
+    const csv = await response.text();
+    const [header, ...dataRows] = parseCsv(csv);
 
-    // Första raden är header: "Lagets Namn,Ligakod,Logo URL,Slug"
-    const dataLines = lines.slice(1);
+    if (!header || header.length < 4) {
+      throw new Error("Lag-sheeten saknar rätt kolumner.");
+    }
 
-    rows.value = dataLines
-      .map((line) => line.split(","))
-      .filter((cols) => cols.length >= 4 && cols[0].trim() !== "")
-      .map(([name, leagueCode, logoUrl, slug]) => ({
+    rows.value = dataRows
+      .filter((row) => row.length >= 4 && row[0].trim())
+      .map(([name, leagueCode, logo, slug]) => ({
         name: name.trim(),
         league: Number(leagueCode.trim()),
-        logo: logoUrl.trim(),
+        logo: logo.trim(),
         slug: slug.trim(),
-      }));
-  } catch (e) {
-    console.error("Kunde inte läsa lag-sheet:", e);
+      }))
+      .filter((team) => team.name && team.slug && [1, 2, 3].includes(team.league));
+  } catch (error) {
+    console.error("Kunde inte läsa lag-sheet:", error);
   } finally {
     isLoading.value = false;
   }
-});
+};
 
-// Allsvenskan = ligakod 1
-const teams = computed(() =>
-  rows.value
-    .filter((t) => t.league === 1)
-    .map((t) => ({
-      name: t.name,
-      logo: t.logo,
-      path: `/allsvenskan/${t.slug}`, // 👈 samma slug som TeamChants använder
-    }))
-);
+onMounted(loadTeams);
 </script>
 
 <template>
-  <main style="text-align: center;">
+  <main class="team-list-page">
     <div class="category">
-      <h1>Allsvenskan</h1>
-      <img src="public/images/teams-logo/allsvenskan/allsvenskan.webp" alt="" width="60" height="60" />
+      <h1>{{ activeLeague.name }}</h1>
+      <img v-if="selectedLeague === 1" src="/images/teams-logo/allsvenskan.webp" alt="Allsvenskan" width="60"
+        height="60" />
     </div>
 
-    <div v-if="isLoading">Laddar lag...</div>
+    <nav class="league-nav" aria-label="Välj liga">
+      <button v-for="league in leagueTabs" :key="league.code" type="button"
+        :class="{ active: selectedLeague === league.code }"
+        :aria-current="selectedLeague === league.code ? 'page' : undefined" @click="selectedLeague = league.code">
+        {{ league.name }}
+      </button>
+    </nav>
 
-    <div v-else class="wrapper">
+    <div v-if="isLoading" class="status">Laddar lag...</div>
+
+    <div v-else-if="teams.length" class="wrapper">
       <div v-for="team in teams" :key="team.slug">
-        <NuxtLink :to="team.path">
-          <img :src="team.logo" :alt="team.name" />
+        <NuxtLink :to="team.path" class="team-card">
+          <img :src="team.logo" :alt="team.name" loading="lazy" />
           <p>{{ team.name }}</p>
         </NuxtLink>
       </div>
     </div>
+
+    <p v-else class="status">
+      Inga lag finns i {{ activeLeague.name }} ännu.
+    </p>
   </main>
 </template>
 
 <style scoped>
+.team-list-page {
+  text-align: center;
+}
+
 .category {
-  margin-top: 20px;
+  margin: 20px 0;
   display: flex;
   justify-content: center;
-  margin-bottom: 20px;
   align-items: center;
+  gap: 10px;
 
   h1 {
     font-size: 25px;
   }
 
   img {
-    background-color: white;
-    border-radius: 100%;
-    margin-left: 10px;
+    background: #fff;
+    border-radius: 50%;
     width: 50px;
     height: 50px;
+    object-fit: contain;
   }
 }
 
-a {
+.league-nav {
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 auto 28px;
+}
 
-  img {
-    width: 65px;
-    height: 65px;
+.league-nav button {
+  appearance: none;
+  border: 1px solid var(--color-border-hover);
+  border-radius: 999px;
+  background: var(--color-background-soft);
+  color: var(--color-text);
+  padding: 8px 15px;
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
 
-  }
+.league-nav button:hover,
+.league-nav button.active {
+  background: var(--color-accent);
+  border-color: var(--color-accent);
+  color: #fff;
+}
 
-  p {
-    font-size: 12px;
-  }
+.team-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-height: 145px;
+}
+
+.team-card img {
+  width: 65px;
+  height: 75px;
+  object-fit: contain;
+  margin-top: 0.5rem;
+}
+
+.team-card p {
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.status {
+  color: var(--color-text-muted);
+  margin: 30px auto;
+  max-width: 500px;
 }
 
 @media (min-width: 768px) {
-  a img {
-    width: 100px;
-    height: 100px;
+  .category h1 {
+    font-size: 30px;
   }
 
-  a p {
+  .category img {
+    width: 60px;
+    height: 60px;
+  }
+
+  .team-card img {
+    width: 100px;
+    height: 105px;
+  }
+
+  .team-card p {
     font-size: 16px;
   }
 }
 
 @media (min-width: 1200px) {
-  .category {
-    h1 {
-      font-size: 35px;
-    }
+  .category h1 {
+    font-size: 35px;
+  }
 
-    img {
-      width: 75px;
-      height: 75px;
-    }
+  .category img {
+    width: 75px;
+    height: 75px;
   }
 }
 </style>

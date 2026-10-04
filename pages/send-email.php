@@ -1,7 +1,7 @@
 <?php
 /**
  * @created 2025
- * @author Bennviddesign (https://bennviddesign.com)
+ * @author Bennviddesign (https://bennviddesign.se/en)
  * @license MIT
  * @website https://ramsan.se
  * @github-repo https://github.com/Bennviddesign/ramsan
@@ -15,20 +15,37 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = $_POST['email'] ?? '';
     $amne = $_POST['amne'] ?? '';
     $message = $_POST['message'] ?? '';
-    $to = 'tipsa@ramsan.se'; // Your recipient email
-    $subject = "Nytt meddelande från $name";
 
-    // Email headers
+    // 1. Mottagare: Din privata Gmail-adress direkt!
+    $to = 'bennviddesign@gmail.com'; 
+
+    // 2. Tydligt ämne så du ser att det är ett tips från ramsan.se
+    $subject = "[Tips från Ramsan.se] $amne (från $name)";
+
+    // 3. E-postrubriker (Headers)
     $boundary = md5(uniqid(time()));
-    $headers = "From: $email\r\n";
+    
+    // Avsändaren MÅSTE vara en domänadress på webbhotellet (t.ex. tipsa@ramsan.se eller s125536@ramsan.se)
+    // annars markerar e-postservrar meddelandet som SPAM/fusk!
+    $headers = "From: Ramsan.se <tipsa@ramsan.se>\r\n";
+    
+    // Reply-To gör att när du klickar "Svara" i Gmail så svarar du direkt till besökarens e-post!
+    if (!empty($email)) {
+        $headers .= "Reply-To: $email\r\n";
+    }
+
     $headers .= "MIME-Version: 1.0\r\n";
     $headers .= "Content-Type: multipart/mixed; boundary=\"$boundary\"\r\n";
 
     // Email body
     $body = "--$boundary\r\n";
     $body .= "Content-Type: text/plain; charset=UTF-8\r\n";
-    $body .= "Content-Transfer-Encoding: 7bit\r\n\r\n";
-    $body .= "Namn: $name\nEmail: $email\nÄmne: $amne\nMeddelande: $message\r\n";
+    $body .= "Content-Transfer-Encoding: 8bit\r\n\r\n";
+    $body .= "Du har fått ett nytt meddelande från ramsan.se!\n\n";
+    $body .= "Namn: $name\n";
+    $body .= "E-post: $email\n";
+    $body .= "Ämne: $amne\n\n";
+    $body .= "Meddelande:\n$message\r\n";
 
     // Handle file upload
     if (isset($_FILES['file']) && $_FILES['file']['error'] === UPLOAD_ERR_OK) {
@@ -50,7 +67,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     $body .= "--$boundary--";
 
-    // Send email using Inleed's SMTP
+    // Send email using PHP mail()
     $mailSent = mail($to, $subject, $body, $headers);
 
     // Provide feedback

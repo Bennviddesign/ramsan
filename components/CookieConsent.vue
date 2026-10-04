@@ -1,31 +1,26 @@
-<!--
-/**
- * @created 2025
- * @author Bennviddesign (https://bennviddesign.com)
- * @license MIT
- * @website https://ramsan.se
- * @github-repo https://github.com/Bennviddesign/ramsan
- * @github-profile https://github.com/Bennviddesign
- */
--->
-
 <!-- components/CookieConsent.vue -->
 <script setup>
+import { onMounted, ref } from 'vue'
+
 const cookieConsent = useCookie('cookieConsent', {
-    maxAge: 365 * 2, // 2 år
-    sameSite: 'lax'
+    maxAge: 365 * 24 * 60 * 60 * 2, // 2 år i sekunder
+    path: '/',
+    sameSite: 'lax',
 })
 
 const showBanner = ref(false)
 
 onMounted(() => {
-    if (!cookieConsent.value) {
+    const localConsent = localStorage.getItem('cookieConsent')
+
+    if (!cookieConsent.value && !localConsent) {
         showBanner.value = true
     }
 })
 
 const acceptCookies = () => {
     cookieConsent.value = 'accepted'
+    localStorage.setItem('cookieConsent', 'accepted')
     showBanner.value = false
 }
 </script>
@@ -52,11 +47,13 @@ const acceptCookies = () => {
     bottom: 0;
     left: 0;
     right: 0;
-    background: #000000b0;
+    /* Använder tema-variabler med fallback ifall de saknas */
+    background: var(--color-background-soft, #f8f9fa);
+    color: var(--color-text, #212529);
+    border-top: 1px solid var(--color-border, #e9ecef);
     padding: 1rem;
-    /* box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); */
-    color: white;
     z-index: 1000;
+    backdrop-filter: blur(8px);
 }
 
 .content {
@@ -69,19 +66,34 @@ const acceptCookies = () => {
 }
 
 .policy-link {
-    color: #007bff;
+    color: var(--color-accent, #007bff);
     text-decoration: underline;
     margin-left: 0.5rem;
 }
 
 .accept-button {
-    background: #007bff;
-    color: white;
+    background: var(--color-accent, #007bff);
+    color: #ffffff;
     border: none;
     padding: 0.5rem 1.5rem;
-    border-radius: 4px;
+    border-radius: 6px;
+    font-weight: 500;
     cursor: pointer;
     flex-shrink: 0;
+    transition: opacity 0.2s ease;
+}
+
+.accept-button:hover {
+    opacity: 0.9;
+}
+
+/* Stöd för mörkt läge via systemets prefers-color-scheme ifall tema-variabler inte används globalt */
+@media (prefers-color-scheme: dark) {
+    .cookie-banner {
+        background: var(--color-background-soft, rgba(15, 23, 42, 0.95));
+        color: var(--color-text, #f8fafc);
+        border-top-color: var(--color-border, #1e293b);
+    }
 }
 
 @media (max-width: 768px) {

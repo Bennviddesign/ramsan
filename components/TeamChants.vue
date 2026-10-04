@@ -1,162 +1,240 @@
 <script setup>
-// Define component props
+import { computed, onMounted, ref } from "vue";
+import { getCachedData } from "~/utils/cache";
+import { parseCsv, TEAM_SHEET_URL, getChantsSheetUrl } from "~/utils/sheets";
+
 const props = defineProps({
-    team: {
-        type: String,
-        required: true // The "team" prop is required and must be a string
-    }
-})
+  team: { type: String, required: true },
+  league: { type: String, required: true },
+});
 
-// Reactive state variables
 const contents = ref([]);
-const config = useRuntimeConfig();
+const teamInfo = ref(null);
 const isLoading = ref(true);
+const errorMessage = ref("");
+const cacheVersion = "v2";
 
-const cacheVersion = 'v1.0'; // Cache version to help manage cache updates
+const loadTeamInfo = async () => {
+  const data = await getCachedData(`team-list_${cacheVersion}`, async () => {
+    const response = await fetch(TEAM_SHEET_URL);
+    if (!response.ok) throw new Error(`Google Sheets svarade ${response.status}`);
+    return parseCsv(await response.text());
+  }, 1);
 
-// Utility function to add line breaks in text for proper formatting
-const addLineBreaks = (text) => {
-    return text.replace(/(?:\r\n|\r|\n)/g, '<br>');
+  // Rensa bort helt tomma rader
+  const validRows = data.filter((row) => row.some((cell) => cell && cell.trim() !== ""));
+
+  // Tvätta props.team så att den bara innehåller ren text i små bokstäver
+  const targetSlug = String(props.team || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+
+  // Sök i arket och tvätta även värdet från kolumn D (row[3]) på samma sätt
+  const found = validRows.find((row) => {
+    const sheetSlug = String(row[3] || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    return sheetSlug === targetSlug;
+  });
+
+  if (found) {
+    teamInfo.value = {
+      name: found[0]?.trim() || props.team,
+      league: Number(found[1]?.trim()),
+      logo: found[2]?.trim() || "",
+      slug: found[3]?.trim() || props.team,
+    };
+  }
 };
 
-// Fetches data from Google Sheets API with caching
 const fetchSheetData = async () => {
-    // Construct API URL using the provided team name and Google Sheets API key
-    const apiUrl = `https://sheets.googleapis.com/v4/spreadsheets/19tGjwPE8Zd_CQe0Ar2eNUJlSzlD5K4u3Mf2amHHAGrQ/values/${props.team}?key=${config.public.googleSheetsApiKey}`;
-    const cacheKey = `${apiUrl}_${cacheVersion}`;
+  const sheetUrl = getChantsSheetUrl(props.team);
+  const cacheKey = `${sheetUrl}_${cacheVersion}`;
 
-    try {
-        // Attempt to retrieve cached data, otherwise fetch fresh data
-        const data = await getCachedData(cacheKey, () => $fetch(apiUrl));
-        const rows = data.values;
+  try {
+    const data = await getCachedData(cacheKey, async () => {
+      const response = await fetch(sheetUrl);
+      if (!response.ok) throw new Error(`Google Sheets svarade ${response.status}`);
+      return parseCsv(await response.text());
+    });
 
-        if (rows && rows.length > 1) {
-            // Transform raw data into an array of objects with structured properties
-            contents.value = rows.slice(1).map((row) => ({
-                title: row[0] || '',
-                description: addLineBreaks(row[1] || ''),
-                audioURL: row[2] || '',
-                expanded: false
-            }));
-        }
-    } catch (error) {
-        console.error('Kunde inte hämta in data:', error);
-    } finally {
-        // Set loading state to false once data fetching is completed (success or failure)
-        isLoading.value = false;
-    }
+    const [, ...rows] = data;
+
+    contents.value = rows.map((row) => ({
+      title: row[0] || "",
+      description: row[1] || "",
+      audioURL: row[2] || "",
+      expanded: false,
+    }));
+  } catch (error) {
+    console.error("Kunde inte hämta ramsor:", error);
+    errorMessage.value = "Kunde inte hämta ramsorna just nu.";
+  }
 };
 
-// Fetch data when the component is mounted
-onMounted(fetchSheetData);
+const teamLogo = computed(() => teamInfo.value?.logo || "");
+const teamName = computed(() => teamInfo.value?.name || props.team);
+
+onMounted(async () => {
+  try {
+    await loadTeamInfo();
+  } catch (error) {
+    console.error("Kunde inte hämta laginformation:", error);
+  }
+
+  await fetchSheetData();
+  isLoading.value = false;
+});
 </script>
 
 <template>
-    <div>
-        <div class="team-name">
-            <!-- Dynamic image path -->
-            <img :src="`/images/teams-logo/allsvenskan/${team}.png`" :alt="team" width="80" height="80">
-            <!-- <h1>{{ team.toUpperCase() }}</h1> -->
-        </div>
+  <div class="team-page">
+    <NuxtLink to="/" class="back-link">← Tillbaka till ligorna</NuxtLink>
 
-        <!-- Reusable chant list -->
-        <div v-for="(c, index) in contents" :key="index">
-            <div class="title" @click="c.expanded = !c.expanded">
-                <div>
-                    <h3 v-if="c.expanded"
-                        style="border: 1px solid white; border-radius: 50px; padding: 5px 10px; margin-left: -10px; margin-top: -5px;">
-                        {{
-                        c.title }}</h3>
-                    <h3 v-else>{{ c.title }}</h3>
-                </div>
-                <div>
-                    <span v-if="c.expanded">&#x2191;</span>
-                    <span v-else>&#x2193;</span>
-                </div>
-            </div>
-
-            <div class="description" v-if="c.expanded">
-                <audio controls v-if="c.audioURL">
-                    <source :src="c.audioURL" type="audio/mpeg" />
-                    Your browser does not support the audio element.
-                </audio>
-                <span style="font-style: italic; margin: auto;" v-else><a href="/contact">Tyvärr ingen ljudfil, skicka
-                        gärna in om ni
-                        har!</a></span>
-                <div class="description" v-html="c.description"></div>
-            </div>
-        </div>
+    <div class="team-name">
+      <img v-if="teamLogo" :src="teamLogo" :alt="teamName" width="80" height="80" />
+      <h1>{{ teamName }}</h1>
     </div>
+
+    <div v-if="isLoading" class="status">Laddar ramsor...</div>
+    <div v-else-if="errorMessage" class="status">{{ errorMessage }}</div>
+
+    <div v-else-if="contents.length">
+      <div v-for="(c, index) in contents" :key="index" class="chant">
+        <button class="title" type="button" @click="c.expanded = !c.expanded">
+          <span>{{ c.title }}</span>
+          <span aria-hidden="true">{{ c.expanded ? "↑" : "↓" }}</span>
+        </button>
+
+        <div v-if="c.expanded" class="description">
+          <audio v-if="c.audioURL" controls preload="none">
+            <source :src="c.audioURL" type="audio/mpeg" />
+            Din webbläsare stödjer inte ljuduppspelning.
+          </audio>
+          <span v-else class="missing-audio">
+            <NuxtLink to="/contact">Tyvärr ingen ljudfil, skicka gärna in om ni har!</NuxtLink>
+          </span>
+          <div class="description-text">{{ c.description }}</div>
+        </div>
+      </div>
+    </div>
+
+    <p v-else class="status">Det finns inga ramsor för detta lag ännu.</p>
+  </div>
 </template>
+
 <style scoped>
-h3 {
-    font-size: 14px;
+.team-page {
+  max-width: 850px;
+  margin: 0 auto;
 }
 
-.title {
-    cursor: pointer;
-    display: flex;
-    justify-content: space-between;
-    margin: auto;
-}
-
-.title,
-.description {
-    padding-top: 15px;
-    padding-bottom: 15px;
-    color: white;
-}
-
-.description {
-    display: grid;
-    margin: auto;
-
-    audio {
-        width: 300px;
-        height: 30px;
-        margin: auto
-    }
-
-    span {
-        font-size: 12px;
-        text-decoration: underline;
-    }
+.back-link {
+  display: inline-block;
+  margin: 10px 0 20px;
+  color: var(--color-text-muted);
+  font-size: 13px;
 }
 
 .team-name {
-    margin-top: 20px;
-    margin-bottom: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin: 15px 0 25px;
+}
 
-    img {
-        width: 65px;
-        height: 65px;
-    }
+.team-name img {
+  width: 65px;
+  height: 65px;
+  object-fit: contain;
+}
+
+.team-name h1 {
+  font-size: 24px;
+}
+
+.chant {
+  border-bottom: 1px solid var(--color-border);
+}
+
+.title {
+  appearance: none;
+  border: 0;
+  background: transparent;
+  color: var(--color-heading);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  padding: 15px;
+  font: inherit;
+  text-align: left;
+}
+
+.title:hover {
+  background: var(--color-background-soft);
+}
+
+.title span:first-child {
+  font-size: 14px;
+}
+
+.title span:last-child {
+  color: var(--color-accent);
+  font-size: 20px;
+}
+
+.description {
+  display: grid;
+  gap: 15px;
+  padding: 0 15px 20px;
+  color: var(--color-text);
+}
+
+.description audio {
+  width: min(100%, 420px);
+  height: 34px;
+  margin: auto;
+}
+
+.missing-audio {
+  text-align: center;
+  font-size: 12px;
+}
+
+.description-text {
+  white-space: pre-line;
+}
+
+.status {
+  text-align: center;
+  color: var(--color-text-muted);
+  margin: 30px auto;
 }
 
 @media (min-width: 768px) {
-    h3 {
-        font-size: 18px;
-    }
+  .team-name h1 {
+    font-size: 30px;
+  }
 
-    .title {
-        width: 85%;
-    }
+  .team-name img {
+    width: 85px;
+    height: 85px;
+  }
+
+  .title span:first-child {
+    font-size: 18px;
+  }
 }
 
 @media (min-width: 1200px) {
+  .team-name img {
+    width: 100px;
+    height: 100px;
+  }
 
-    .title,
-    .description {
-        padding: 15px;
-    }
-
-    .team-name {
-
-
-        img {
-            width: 100px;
-            height: 100px;
-        }
-    }
+  .title,
+  .description {
+    padding-left: 15px;
+    padding-right: 15px;
+  }
 }
 </style>

@@ -1,136 +1,93 @@
 # ⚽📢 Ramsan
 
-**A web app for football chants – text and audio!**
+A web app for Swedish football chants – text and audio.
 
-Ramsan is a Nuxt 3 application where you can find and listen to football chants from different teams. The app fetches chants dynamically from Google Sheets via the Google API, and audio files are hosted on Cloudflare.
+## Features
 
-## Features ✨
+- Team-specific chant collections
+- Audio playback from external hosting
+- Dynamic team/league list from Google Sheets
+- Allsvenskan, Superettan and Övriga
+- Dark mode by default + persistent light mode
+- Responsive mobile-first design
+- No Google API key shipped to the browser
 
-- 🎶 Team-specific chant collections
-- 🔊 Cloudflare-hosted audio playback
-- ❤️ Interactive like counter system
-- 📱 Responsive mobile-first design
-- 📊 Real-time content updates via Google Sheets
-- 🛠️ Dynamic routing with `[team].vue`
+## Tech stack
 
-## Tech Stack 💻
+- Vue 3 + Nuxt 3
+- SCSS + CSS variables
+- Google Sheets public CSV / gviz endpoints
+- Static Nuxt/Nitro deployment
 
-| Category           | Technologies           |
-| ------------------ | ---------------------- |
-| Framework          | Vue 3 + Nuxt 3         |
-| Styling            | SCSS + CSS Modules     |
-| State Management   | Composables            |
-| Content Management | Google Sheets API      |
-| Audio Hosting      | Cloudflare Stream      |
-| Deployment         | Node.js + Nitro Server |
+## Google Sheets – teams
 
-## Project Setup 🛠️
+The team list is read from the public CSV export of the configured team spreadsheet.
+The first row must contain these columns:
 
-### Prerequisites
+```text
+Lagets Namn | Ligakod | Logo URL | Slug
+```
 
-- Node.js 18+
-- Google Sheets API key
-- Cloudflare account (for audio hosting)
+Use these league codes:
 
-### Installation
+| Ligakod | Liga |
+| ---: | --- |
+| `1` | Allsvenskan |
+| `2` | Superettan |
+| `3` | Övriga |
+
+Example:
+
+```text
+Malmö FF | 1 | https://.../malmo.png | malmo
+Exempel FC | 2 | https://.../exempel.png | exempel-fc
+Lokalt lag | 3 | https://.../lokalt.png | lokalt-lag
+```
+
+**To move a team between leagues, only change `Ligakod` in the sheet.**
+
+The site will automatically place it under the corresponding league tab.
+
+## Google Sheets – chants
+
+Each team should have a sheet/tab whose name matches its `Slug`.
+The expected columns are:
+
+```text
+Title | Description | AudioURL
+```
+
+The chant sheet is read through Google's public `gviz` CSV endpoint. This means there is no Google API key in the frontend bundle.
+
+The spreadsheets therefore need to be readable publicly. Do not put private information or secrets in them.
+
+## Security
+
+Do **not** add API keys, passwords or SMTP credentials to `runtimeConfig.public`, `.env` committed to the repository, or frontend JavaScript. Anything used by the browser can be inspected by visitors.
+
+This project intentionally does not use the Google Sheets API key. The previous `NUXT_PUBLIC_GOOGLE_SHEETS_API_KEY` configuration has been removed.
+
+For local development, copy `.env.example` to `.env` only if you later add server-only credentials.
+
+## Setup
 
 ```bash
-# Using npm
 npm install
-```
-
-## Configuration 🔧
-
-1. Create `.env` file:
-
-```env
-PUBLIC_GOOGLE_SHEETS_API_KEY=your_api_key
-```
-
-2. **Google Sheets setup**:
-
-   - Create spreadsheet with team-specific tabs
-   - Format columns: `Title | Description | AudioURL`
-   - Share spreadsheet with your service account
-
-3. **Cloudflare audio setup**:
-   - Upload MP3 files to Cloudflare Stream
-   - Add audio URLs to Google Sheet
-
-## Development 🚀
-
-Start local development server:
-
-```bash
 npm run dev
 ```
 
-Access via: `http://localhost:3000`
-
-## Project Structure 📂
-
-```
-RAMSAN/
-├── assets/
-│   ├── scss/
-│   └── base.css
-├── components/
-│   ├── TeamChants.vue
-├── pages/
-│   ├── allsvenskan/
-│   │   └── [team].vue
-├── plugins/
-├── public/
-│   └── images/
-├── server/
-├── nuxt.config.ts
-└── app.vue
-```
-
-## Deployment 🚀
-
-Follow the [Nuxt deployment guide](https://nuxt.com/docs/getting-started/deployment) for platforms like:
-
-- Node.js servers
-- Serverless platforms
-- Static hosting (pre-rendered)
-
-## Contributing 🤝
-
-1. Fork the repository
-2. Create feature branch:
+Build:
 
 ```bash
-git checkout -b feature/new-feature
+npm run build
 ```
 
-3. Commit changes:
+Generate a static site:
 
 ```bash
-git commit -m 'Add awesome feature'
+npm run generate
 ```
 
-4. Push to branch:
+## License
 
-```bash
-git push origin feature/new-feature
-```
-
-5. Open a Pull Request
-
-## License 📄
-
-Distributed under the MIT License. See `LICENSE` for details.
-
----
-
-**Note**: Replace placeholder values (`https://ramsan.se`, `your_api_key`) with actual project values before deployment.
-
-## Author ✍️
-
-**Bennviddesign**  
-A solo business run by a passionate developer and designer.
-
-📧 **Contact:** [bennviddesign@gmail.com](mailto:bennviddesign@gmail.com)  
-🔗 **GitHub:** [github.com/bennviddesign](https://github.com/bennviddesign)  
-🌍 **Website:** [bennviddesign.se](https://bennviddesign.com)
+MIT. See `LICENSE`.

@@ -3,8 +3,6 @@
  * @author Bennviddesign (https://bennviddesign.com)
  * @license MIT
  * @website https://ramsan.se
- * @github-repo https://github.com/Bennviddesign/ramsan
- * @github-profile https://github.com/Bennviddesign
  */
 
 // plugins/router.background.client.ts
@@ -14,53 +12,14 @@ export default defineNuxtPlugin((nuxtApp) => {
   router.beforeEach((to) => {
     if (process.client) {
       const body = document.body;
-      const basePath = "/images/teams-logo/allsvenskan/background/";
 
-      // Reset styles
+      // Nollställ eventuella gamla bakgrundsbilder
       body.style.backgroundImage = "";
 
-      // Debug: logga aktuell route
-      // console.log("Aktuell route:", to.path);
-      // console.log("Params:", to.params);
+      // Vi sätter inga tunga AI-bilder här längre,
+      // utan låter din rena CSS-bakgrund (mörka tema) sköta utseendet.
 
-      // Manage home/contact page
-      if (
-        to.name === "index" ||
-        to.name === "contact" ||
-        to.name === "privacypolicy"
-      ) {
-        const imageUrl = `${basePath}allsvenskan-background.webp`;
-        console.log("Laddar generell bakgrund:", imageUrl);
-        body.style.backgroundImage = `url('${imageUrl}')`;
-      }
-      // Manage team pages
-      else if (to.path.startsWith("/allsvenskan")) {
-        const teamSlug = to.params.team?.toString();
-        console.log(teamSlug);
-        if (teamSlug) {
-          // Clear special characters and spaces
-          const cleanSlug = teamSlug
-            .toLowerCase()
-            .replace(/å/g, "a")
-            .replace(/ä/g, "a")
-            .replace(/ö/g, "o")
-            .replace(/\s+/g, "-");
-
-          const imageUrl = `${basePath}${cleanSlug}-background.webp`;
-          // console.log(imageUrl);
-
-          // Load image
-          const img = new Image();
-          img.src = imageUrl;
-          img.onload = () => {
-            body.style.backgroundImage = `url('${imageUrl}')`;
-          };
-        }
-      }
-
-      // Global styles for background
       body.style.backgroundSize = "cover";
-      body.style.backgroundAttachment = "scroll";
     }
   });
 });

@@ -4,17 +4,28 @@ export default defineNuxtConfig({
   devtools: { enabled: true },
   css: ["@/assets/scss/main.scss"],
   runtimeConfig: {
+    // 🔒 PRIVATA VARIABLER (Endast tillgängliga på servern – SÄKERT!)
+    mailHost: process.env.MAIL_HOST,
+    mailPort: process.env.MAIL_PORT,
+    mailUser: process.env.MAIL_USER,
+    mailPassword: process.env.MAIL_PASSWORD,
+
+    // 🌐 OFFENTLIGA VARIABLER (Tillgängliga i webbläsaren)
     public: {
-      googleSheetsApiKey: process.env.NUXT_PUBLIC_GOOGLE_SHEETS_API_KEY,
       useRealIp: process.env.NODE_ENV === "production",
-      mailHost: process.env.MAIL_HOST,
-      mailPort: process.env.MAIL_PORT,
-      mailUser: process.env.MAIL_USER,
-      mailPassword: process.env.MAIL_PASSWORD,
     },
   },
   nitro: {
     preset: "static",
+  },
+  // ⚡ CACHE-REGLER FÖR BILDER OCH TILLGÅNGAR
+  routeRules: {
+    "/_nuxt/**": {
+      headers: { "cache-control": "public, max-age=31536000, immutable" },
+    },
+    "/images/**": {
+      headers: { "cache-control": "public, max-age=31536000, immutable" },
+    },
   },
   app: {
     head: {

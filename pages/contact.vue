@@ -11,37 +11,36 @@
 
 <template>
   <div class="container">
-    <div class="form">
+    <div class="form-wrapper">
       <form action="/send-email.php" method="POST" enctype="multipart/form-data" @submit="handleSubmit">
-        <div>
+        <div class="form-header">
           <h2>Tipsa gärna oss!</h2>
         </div>
         <div>
           <label for="name">Namn:</label>
-          <input v-model="form.name" name="name" type="text" placeholder="Ditt namn.." required />
+          <input v-model="form.name" id="name" name="name" type="text" placeholder="Ditt namn.." required />
         </div>
         <div>
           <label for="email">Email:</label>
-          <input v-model="form.email" name="email" type="email" placeholder="Din email.." required />
+          <input v-model="form.email" id="email" name="email" type="email" placeholder="Din email.." required />
         </div>
         <div>
           <label for="amne">Ämne:</label>
-          <input v-model="form.amne" name="amne" type="text" placeholder="Ämne" required />
+          <input v-model="form.amne" id="amne" name="amne" type="text" placeholder="Ämne" required />
         </div>
         <div>
-          <label for="file">Fil:</label>
-          <input type="file" name="file" accept="audio/mpeg" @change="handleFileUpload" />
+          <label for="file">Fil (MP3):</label>
+          <input id="file" type="file" name="file" accept="audio/mpeg" @change="handleFileUpload" class="file-input" />
         </div>
-        <div>
+        <div class="full-width">
           <label for="message">Meddelande:</label>
-          <textarea v-model="form.message" name="message" placeholder="Ditt meddelande.." required></textarea>
+          <textarea v-model="form.message" id="message" name="message" placeholder="Ditt meddelande.."
+            required></textarea>
         </div>
-        <div style="align-content: end;">
-          <div>
-            <button type="submit" id="submit">Skicka</button>
-            <p v-if="successMessage">{{ successMessage }}</p>
-            <p v-if="errorMessage">{{ errorMessage }}</p>
-          </div>
+        <div class="full-width submit-container">
+          <button type="submit" id="submit">Skicka</button>
+          <p v-if="successMessage" class="status-message success">{{ successMessage }}</p>
+          <p v-if="errorMessage" class="status-message error">{{ errorMessage }}</p>
         </div>
       </form>
     </div>
@@ -65,7 +64,6 @@ const errorMessage = ref('');
 
 const handleFileUpload = (event) => {
   selectedFile.value = event.target.files[0];
-  console.log('File selected:', selectedFile.value ? selectedFile.value.name : 'No file');
 };
 
 const handleSubmit = () => {
@@ -89,98 +87,126 @@ onMounted(() => {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 80vh;
+  min-height: 70vh;
+  padding: 1rem;
+}
+
+.form-wrapper {
+  width: 100%;
+  max-width: 800px;
 }
 
 form {
-  gap: 20px;
-  height: auto;
-  background-color: rgba(255, 255, 255, 0.13);
-  margin: auto;
-  border-radius: 10px;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  background-color: var(--color-background-soft, rgba(255, 255, 255, 0.05));
+  color: var(--color-text, inherit);
+  border-radius: 12px;
   backdrop-filter: blur(10px);
-  border: 2px solid rgba(255, 255, 255, 0.1);
-  box-shadow: 0 0 40px rgba(8, 7, 16, 0.6);
-  padding: 20px 20px;
-
-  h2 {
-    text-align: center;
-  }
+  border: 1px solid var(--color-border, rgba(255, 255, 255, 0.1));
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  padding: 2rem;
 }
 
-form div:first-child {
+.form-header,
+.full-width {
   grid-column: 1 / -1;
-
 }
 
-form * {
-  font-family: 'Poppins', sans-serif;
-  color: #ffffff;
-  letter-spacing: 0.5px;
-  outline: none;
-  border: none;
-}
-
-form h3 {
-  font-size: 32px;
-  font-weight: 500;
-  line-height: 42px;
+h2 {
   text-align: center;
+  margin-bottom: 0.5rem;
+  color: var(--color-heading, inherit);
+  font-size: 1.75rem;
 }
 
 label {
-  margin-top: 30px;
-  font-size: 16px;
+  display: block;
+  font-size: 0.95rem;
+  font-weight: 500;
+  margin-bottom: 0.4rem;
+  color: var(--color-text, inherit);
+}
+
+input[type="text"],
+input[type="email"],
+textarea {
+  display: block;
+  width: 100%;
+  background-color: var(--color-background-mute, rgba(0, 0, 0, 0.05));
+  color: var(--color-text, inherit);
+  border: 1px solid var(--color-border, #ccc);
+  border-radius: 6px;
+  padding: 0.75rem;
+  font-size: 0.95rem;
+  font-family: inherit;
+  box-sizing: border-box;
+  transition: border-color 0.2s, background-color 0.2s;
+}
+
+input[type="text"]:focus,
+input[type="email"]:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--color-accent, #007bff);
+}
+
+textarea {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.file-input {
+  width: 100%;
+  padding: 0.5rem 0;
+  color: var(--color-text, inherit);
+}
+
+/* Anpassning av placeholders för tema */
+::placeholder {
+  color: var(--color-text, #888);
+  opacity: 0.6;
+}
+
+.submit-container {
+  margin-top: 0.5rem;
+}
+
+button[type="submit"] {
+  width: 100%;
+  background-color: var(--color-accent, #007bff);
+  color: #ffffff;
+  padding: 0.85rem 0;
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+button[type="submit"]:hover {
+  opacity: 0.9;
+}
+
+.status-message {
+  margin-top: 1rem;
+  text-align: center;
   font-weight: 500;
 }
 
-input,
-textarea {
-  display: block;
-  height: 50px;
-  width: 100%;
-  background-color: rgba(255, 255, 255, 0.07);
-  border-radius: 3px;
-  padding: 0 10px;
-  margin-top: 8px;
-  font-size: 14px;
-  font-weight: 300;
-  align-content: center;
+.status-message.success {
+  color: #28a745;
 }
 
-::placeholder {
-  color: #e5e5e5;
-}
-
-button {
-  width: 100%;
-  background-color: #ffffff;
-  color: #080710;
-  padding: 15px 0;
-  font-size: 18px;
-  font-weight: 600;
-  border-radius: 5px;
-  cursor: pointer;
-}
-
-#submit {
-  background-color: rgba(255, 255, 255, 0.07);
-  color: white;
-  margin-top: 20px;
-}
-
-.container {
-  margin-top: 20px;
+.status-message.error {
+  color: #dc3545;
 }
 
 @media (min-width: 768px) {
   form {
-    display: grid;
     grid-template-columns: repeat(2, 1fr);
-  }
-
-  .container {
-    height: 70vh;
   }
 }
 </style>
